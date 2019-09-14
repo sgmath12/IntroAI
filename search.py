@@ -100,18 +100,19 @@ def depthFirstSearch(problem):
     myStack.push(start_state)
     parents = {}
     path = []
-    Visited = {}
+    Visited = {start_state}
 
     while(myStack.isEmpty() is False):
         
         cur_state = myStack.pop()
-        Visited[cur_state] = True
+        
         if problem.isGoalState(cur_state):
             break
         #Successors = list of (state,action,cost)
         Successors = problem.getSuccessors(cur_state)
         for succesor in Successors:
             if succesor[0] not in Visited:
+                Visited[succesor[0]] = True
                 myStack.push(succesor[0])
                 parents[succesor[0]] = (cur_state,succesor[1])
     
@@ -137,19 +138,20 @@ def breadthFirstSearch(problem):
     myQueue.push(start_state)
     parents = {}
     path = []
-    Visited = {}
+    Visited = {start_state : True}
     
     
     while(myQueue.isEmpty() is False):
-        
         cur_state = myQueue.pop()
-        Visited[cur_state] = True
+        #Visited[cur_state] = True
         if problem.isGoalState(cur_state):
             break
         #Successors = list of (state,action,cost)
         Successors = problem.getSuccessors(cur_state)
         for succesor in Successors:
             if succesor[0] not in Visited:
+                Visited[succesor[0]] = True
+                #print succesor[0]
                 myQueue.push(succesor[0])
                 parents[succesor[0]] = (cur_state,succesor[1])
     
@@ -157,6 +159,7 @@ def breadthFirstSearch(problem):
         path.append(parents[cur_state][1])
         cur_state = parents[cur_state][0]
 
+    
     return path[::-1]
     #util.raiseNotDefined()
 
@@ -225,13 +228,16 @@ def aStarSearch(problem, heuristic=nullHeuristic):
     myPriorityQueue = util.PriorityQueue()
     # 1 : cost.
     myPriorityQueue.push(start_state,1)
+    cumulative_cost = {}
     parents = {}
     path = []
     Visited = {}
+    cumulative_cost[start_state] = 0
     
-    print heuristic
+    
     while(myPriorityQueue.isEmpty() is False):
         cur_state = myPriorityQueue.pop()
+        cur_cost = cumulative_cost[cur_state]
         Visited[cur_state] = True
         if problem.isGoalState(cur_state):
             break
@@ -239,8 +245,9 @@ def aStarSearch(problem, heuristic=nullHeuristic):
         Successors = problem.getSuccessors(cur_state)
         for succesor in Successors:
             if succesor[0] not in Visited:
-                myPriorityQueue.update(succesor[0],succesor[2] + heuristic(cur_state,problem))
+                myPriorityQueue.update(succesor[0],cur_cost + succesor[2] + heuristic(succesor[0],problem))
                 parents[succesor[0]] = (cur_state,succesor[1])
+                cumulative_cost[succesor[0]] = cur_cost + succesor[2]
     
     while (cur_state != start_state):
         path.append(parents[cur_state][1])
