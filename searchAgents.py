@@ -295,9 +295,9 @@ class CornersProblem(search.SearchProblem):
         "*** YOUR CODE HERE ***"
         # use or not ?
         self._visited, self._visitedlist = {},[]
-
+        self.width = right - 1
+        self.height = top - 1
         self.foodIndex = {x:i for i,x in enumerate(self.corners)}
-        #self.foodIndex = {(1,1):0,(1,top) :1, (right,1):2, (right,top):3}
         self.foods = (False,False,False,False)
         # state = tuple of (position, food boolean dictionary)
         # state = ((x,y),{(1,1) : False, (1,top) : False, ...})
@@ -351,8 +351,6 @@ class CornersProblem(search.SearchProblem):
             nextfood = list(foods)
             # modified
             if not self.walls[nextx][nexty] :
-
-            
                 if (nextx,nexty) in self.corners :
                     idx = self.foodIndex[(nextx,nexty)]
                     nextfood[idx] = True
@@ -395,9 +393,54 @@ def cornersHeuristic(state, problem):
     """
     corners = problem.corners # These are the corner coordinates
     walls = problem.walls # These are the walls of the maze, as a Grid (game.py)
-
+    foodIdx = problem.foodIndex
+    foods = state[1]
+    position = state[0]
+    min_distance = 9999999999
+    min_position_idx = None
+    remaining_foods = 0
+    
     "*** YOUR CODE HERE ***"
-    return 0 # Default to trivial solution
+    # 1. find minimum distance from the position of state n to the remaining foods.
+
+    for corner in corners:
+        idx = foodIdx[corner]
+        if foods[idx] == False :
+            remaining_foods += 1
+            cur_distance = abs(position[0] - corner[0]) +abs(position[1] - corner[1])
+            if min_distance > cur_distance:
+                min_distance = cur_distance
+                min_position_idx = idx
+
+    # 2. find minimum distance from min_position_idx to all the remain foods.
+    '''
+    x,y = corners[min_position_idx]
+    for action in [Directions.NORTH, Directions.SOUTH, Directions.EAST, Directions.WEST]:
+        cur_remaining_foods = remain_foods
+        cur_action = action
+        dx, dy = Actions.directionToVector(action)
+        nextx, nexty = int(x + dx), int(y + dy)
+        hitsWall = self.walls[nextx][nexty]
+        if hitsWall == False:
+            while cur_remaining_foods > 0 :
+                # change direction if corners
+                if nextx,nexty in corners:
+                    if 
+    '''            
+    
+    if problem.height < problem.width:
+        dmin = problem.height
+    else:
+        dmin = problem.width
+    
+
+    if remaining_foods >0:
+        min_distance += (remaining_foods-1)*dmin
+    else:
+        min_distance = 0
+    
+
+    return min_distance
 
 class AStarCornersAgent(SearchAgent):
     "A SearchAgent for FoodSearchProblem using A* and your foodHeuristic"
@@ -491,7 +534,47 @@ def foodHeuristic(state, problem):
     """
     position, foodGrid = state
     "*** YOUR CODE HERE ***"
-    return 0
+    remaining_foods = 0
+    foods = []
+    h_n = 0
+    dmin_foods = dmin_curstate = 999999999
+
+    # add remaining foods information
+    for y in range(foodGrid.height):
+        for x in range(foodGrid.width):
+            if foodGrid[x][y] == True:
+                foods.append((x,y))
+
+    remaining_foods = len(foods)
+    if remaining_foods == 0:
+        return 0    
+
+    # find minimum distance between current state and foods
+    for i in range(remaining_foods):
+        d = abs(foods[i][0] - position[0]) + abs(foods[i][1] - position[1])
+        if (dmin_curstate > d):
+            dmin_curstate = d
+            cur_food_idx = i
+    
+    h_n = dmin_curstate
+    edge = 0
+    Visited = {cur_food_idx:True}
+    while edge < remaining_foods -1 :
+        dmin = 999999999
+        d_idx = 0
+        for i in range(remaining_foods):
+            for j in range(remaining_foods):
+                if (i in Visited) and (j not in Visited):
+                    d = abs(foods[i][0] - foods[j][0]) + abs(foods[i][1] - foods[j][1])
+                    if dmin > d :
+                        dmin = d
+                        d_idx = j
+                        
+        Visited[d_idx] = True
+        h_n += dmin
+        edge += 1
+
+    return h_n
 
 class ClosestDotSearchAgent(SearchAgent):
     "Search for all food using a sequence of searches"
