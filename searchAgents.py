@@ -523,6 +523,7 @@ def foodHeuristic(state, problem):
     remaining_foods = 0
     foods = []
     h_n = 0
+    walls = problem.walls
     dmin_foods = dmin_curstate = 999999999
 
     # add remaining foods information
@@ -552,6 +553,17 @@ def foodHeuristic(state, problem):
             for j in range(remaining_foods):
                 if (i in Visited) and (j not in Visited):
                     d = abs(foods[i][0] - foods[j][0]) + abs(foods[i][1] - foods[j][1])
+                    # add
+                    if foods[i][1] == foods[j][1]:
+                        if foods[i][0] < foods[j][0]:
+                            for k in range(foods[i][0]+1,foods[j][0]):
+                                if walls[k][foods[i][1]] == True:
+                                    d +=3
+                        else:
+                            for k in range(foods[j][0]+1,foods[i][0]):
+                                if walls[k][foods[i][1]] == True:
+                                    d +=3
+
                     if dmin > d :
                         dmin = d
                         d_idx = j
